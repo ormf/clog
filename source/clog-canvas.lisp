@@ -24,19 +24,22 @@
   (:documentation "Create a new CLOG-Canvas as child of CLOG-OBJ if
 :AUTO-PLACE (default t) place-inside-bottom-of CLOG-OBJ."))
 
-(defmethod create-canvas ((obj clog-obj)
+(defmethod create-canvas ((obj clog-obj) &rest args
                           &key (width 300) (height 150)
                             (class nil) (hidden nil)
-                            (html-id nil) (auto-place t))
-  (create-child obj (format nil "<canvas~A~A width=~A height=~A/>"
-                            (if class
-                                (format nil " class='~A'"
-                                        (escape-string class :html t))
-                                "")
+                            (html-id nil) (auto-place t)
+                          &allow-other-keys)
+  (declare (ignorable class))
+  (dolist (arg '(:hidden :html-id :auto-place))
+    (remf args arg))
+  (let ((class (getf args :class)))
+    (when class (setf (getf args :class) (escape-string class :html t))))
+  (setf (getf args :width) width (getf args :height) height)
+  (create-child obj (format nil "<canvas ~A ~{~A='~a'~^ ~}/>"
                             (if hidden
                                 " style='visibility:hidden;'"
                                 "")
-                            width height)
+                            args)
                 :clog-type  'clog-canvas
                 :html-id    html-id
                 :auto-place auto-place))
